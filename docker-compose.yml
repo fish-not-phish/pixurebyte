@@ -1,0 +1,53 @@
+services:
+  backend:
+    image: pixurebyte-backend
+    container_name: pixurebyte_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16
+    container_name: pixurebyte_db
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: pixurebytedb
+      POSTGRES_USER: pixurebyte
+      POSTGRES_PASSWORD: pixurebyte_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+
+  frontend:
+    image: pixurebyte-frontend
+    container_name: pixurebyte_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: "production"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:

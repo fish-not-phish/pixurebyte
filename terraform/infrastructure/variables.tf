@@ -1,0 +1,9 @@
+variable "project_name" { type = string }
+variable "aws_region"   { type = string }
+variable "az_suffix"    { type = string }
+variable "vpc_cidr"     { type = string }
+variable "bucket_name"  { type = string }
+variable "ecr_repo_name" { type = string }
+variable "ecs_cluster_name" { type = string }
+variable "container_image_tag" { type = string }
+variable "tags" { type = map(string) }
