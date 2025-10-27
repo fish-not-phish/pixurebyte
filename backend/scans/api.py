@@ -71,6 +71,7 @@ def complete_scan_endpoint(request, team_id: str, scan_id: str):
     responses_list = payload.get("responses") or []
     links_list     = payload.get("links") or []
     downloads_list = payload.get("downloads") or []
+    scan.ssl_info  = payload.get("ssl_info") or {}
 
     if isinstance(responses_list, list):
         for r in responses_list:
@@ -83,7 +84,7 @@ def complete_scan_endpoint(request, team_id: str, scan_id: str):
     scan.links = links_list
     scan.downloads = downloads_list
 
-    scan.status = "complete"
+    scan.status = payload.get("status", "complete")
     scan.save()
 
     return {"status": "updated", "scan_id": str(scan.id), "team_id": str(team.id)}

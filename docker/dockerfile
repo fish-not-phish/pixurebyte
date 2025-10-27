@@ -21,6 +21,7 @@ RUN apt-get update && apt-get install -y \
     libxrandr2 \
     libgbm1 \
     libcairo2 \
+    p7zip-full \
     libpango-1.0-0 \
     && rm -rf /var/lib/apt/lists/*
 

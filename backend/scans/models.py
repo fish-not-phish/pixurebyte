@@ -37,6 +37,7 @@ class Scan(models.Model):
     links = models.JSONField(default=list, blank=True)
     downloads = models.JSONField(default=list, blank=True)
     intelligence = models.JSONField(default=dict, blank=True)
+    ssl_info = models.JSONField(default=dict, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     last_updated = models.DateTimeField(auto_now=True)

@@ -1,3 +1,35 @@
+export interface ScanDownload {
+  filename: string;
+  sha256: string;
+  s3_key: string;
+}
+
+export interface ScanSSLInfo {
+  subject?: Record<string, string>;
+  issuer?: Record<string, string>;
+  san?: string[];
+  valid_from?: string;
+  valid_to?: string;
+}
+
+export interface ScanRequest {
+  method: string;
+  url: string;
+}
+
+export interface ScanResponse {
+  status: number;
+  ok: boolean;
+  url: string;
+  issuer?: string;
+  subject?: string;
+  protocol?: string;
+  valid_from?: number;
+  valid_to?: number;
+  server_ip?: string;
+  server_port?: number;
+}
+
 export interface Scan {
   scan_id: string;
   team_id: string;
@@ -9,11 +41,12 @@ export interface Scan {
   h1?: string | null;
   created_at?: string;
   last_updated?: string;
-  downloads?: { filename: string; sha256: string; s3_key: string }[];
-  requests?: { method: string; url: string }[];
-  responses?: { status: number; ok: boolean; url: string }[];
+  downloads?: ScanDownload[];
+  requests?: ScanRequest[];
+  responses?: ScanResponse[];
+  links?: string[];
+  ssl_info?: ScanSSLInfo;
 }
-
 
 export interface ScanCreateIn {
   url: string;
@@ -31,4 +64,3 @@ export type ScanList = {
   last_updated: string;
   requested_by?: string | null;
 };
-

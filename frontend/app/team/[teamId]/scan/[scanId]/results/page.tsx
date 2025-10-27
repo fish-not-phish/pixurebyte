@@ -3,9 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { fetchScan } from "@/services/scan";
 import type { Scan } from "@/types/scan";
-import type {
-  RenderProps,
-} from "prism-react-renderer";
+import type { RenderProps } from "prism-react-renderer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -14,8 +12,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useParams } from "next/navigation";
 import { Highlight, themes } from "prism-react-renderer";
-import { ScanResponse, ScanDownload, ScanRequest } from "@/types/analytics";
+import { ScanResponse, ScanDownload, ScanRequest } from "@/types/scan";
 import Image from "next/image";
+import { CertificateDetails } from "@/components/cert-card";
 
 export default function ScanResultsPage() {
   const { teamId, scanId } = useParams<{ teamId: string; scanId: string }>();
@@ -48,8 +47,7 @@ export default function ScanResultsPage() {
         }
       } catch (err: unknown) {
         if (!cancelled) {
-          const message =
-            err instanceof Error ? err.message : "Failed to load HTML";
+          const message = err instanceof Error ? err.message : "Failed to load HTML";
           setHtmlSource(null);
           setHtmlError(message);
         }
@@ -69,6 +67,22 @@ export default function ScanResultsPage() {
     }
   }, [scan?.screenshot, scan?.full_code]);
 
+  const certInfo = useMemo(() => {
+    if (!scan?.ssl_info) return null;
+    const info = scan.ssl_info;
+    const validFrom = info.valid_from ? Date.parse(info.valid_from) / 1000 : undefined;
+    const validTo = info.valid_to ? Date.parse(info.valid_to) / 1000 : undefined;
+    return {
+      issuer: info.issuer ? JSON.stringify(info.issuer) : "—",
+      subject: info.subject ? JSON.stringify(info.subject) : "—",
+      protocol: "TLS",
+      valid_from: validFrom,
+      valid_to: validTo,
+      server_ip: undefined,
+      server_port: 443,
+    };
+  }, [scan?.ssl_info]);
+
   if (!scan) {
     return <p className="text-center mt-10">Loading results...</p>;
   }
@@ -79,8 +93,7 @@ export default function ScanResultsPage() {
       await navigator.clipboard.writeText(htmlSource);
       setCopyOK("done");
       setTimeout(() => setCopyOK("idle"), 1200);
-    } catch {
-    }
+    } catch {}
   };
 
   return (
@@ -91,30 +104,31 @@ export default function ScanResultsPage() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid grid-cols-6 w-full mb-4">
+            <TabsList className="grid grid-cols-7 w-full mb-4">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="screenshot">Screenshot</TabsTrigger>
               <TabsTrigger value="html">HTML</TabsTrigger>
               <TabsTrigger value="downloads">Downloads</TabsTrigger>
               <TabsTrigger value="requests">Requests</TabsTrigger>
               <TabsTrigger value="responses">Responses</TabsTrigger>
+              <TabsTrigger value="links">Links</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="overview" className="space-y-2">
-              <p><strong>URL:</strong> {scan.url}</p>
-              <p><strong>Status:</strong> <Badge>{scan.status}</Badge></p>
-              {scan.title && <p><strong>Title:</strong> {scan.title}</p>}
-              {scan.h1 && <p><strong>H1:</strong> {scan.h1}</p>}
-              <p>
-                <strong>Created:</strong>{" "}
-                {scan.created_at ? new Date(scan.created_at).toLocaleString() : "—"}
-              </p>
-              <p>
-                <strong>Last Updated:</strong>{" "}
-                {scan.last_updated ? new Date(scan.last_updated).toLocaleString() : "—"}
-              </p>
+            {/* OVERVIEW */}
+            <TabsContent value="overview" className="space-y-4">
+              <div className="space-y-2">
+                <p><strong>URL:</strong> {scan.url}</p>
+                <p><strong>Status:</strong> <Badge>{scan.status}</Badge></p>
+                {scan.title && <p><strong>Title:</strong> {scan.title}</p>}
+                {scan.h1 && <p><strong>H1:</strong> {scan.h1}</p>}
+                <p><strong>Created:</strong> {scan.created_at ? new Date(scan.created_at).toLocaleString() : "—"}</p>
+                <p><strong>Last Updated:</strong> {scan.last_updated ? new Date(scan.last_updated).toLocaleString() : "—"}</p>
+              </div>
+
+              {scan.ssl_info && <CertificateDetails sslInfo={scan.ssl_info} />}
             </TabsContent>
 
+            {/* SCREENSHOT */}
             <TabsContent value="screenshot">
               {scan.screenshot ? (
                 <div className="relative w-full h-[80vh] border rounded overflow-hidden">
@@ -133,6 +147,7 @@ export default function ScanResultsPage() {
               )}
             </TabsContent>
 
+            {/* HTML */}
             <TabsContent value="html">
               {scan.full_code ? (
                 <>
@@ -225,6 +240,8 @@ export default function ScanResultsPage() {
               )}
             </TabsContent>
 
+
+            {/* DOWNLOADS */}
             <TabsContent value="downloads">
               {scan.downloads?.length ? (
                 <Table>
@@ -237,16 +254,13 @@ export default function ScanResultsPage() {
                   </TableHeader>
                   <TableBody>
                     {scan.downloads?.map((d: ScanDownload, i: number) => {
-                      const href =
-                        mediaOrigin && d?.zip_key
-                          ? `${mediaOrigin}/${d.zip_key}`
-                          : d?.zip_key || "#";
+                      const href = d.s3_key ? `${mediaOrigin}/${d.s3_key}` : "#";
                       return (
                         <TableRow key={i}>
                           <TableCell>{d.filename}</TableCell>
                           <TableCell className="font-mono text-xs">{d.sha256}</TableCell>
                           <TableCell>
-                            {d?.zip_key ? (
+                            {d.s3_key ? (
                               <a
                                 href={href}
                                 target="_blank"
@@ -269,6 +283,7 @@ export default function ScanResultsPage() {
               )}
             </TabsContent>
 
+            {/* REQUESTS */}
             <TabsContent value="requests">
               {scan.requests?.length ? (
                 <ScrollArea className="h-[75vh] border rounded overflow-x-auto">
@@ -294,6 +309,7 @@ export default function ScanResultsPage() {
               )}
             </TabsContent>
 
+            {/* RESPONSES */}
             <TabsContent value="responses">
               {scan.responses?.length ? (
                 <ScrollArea className="h-[75vh] border rounded overflow-x-auto">
@@ -318,6 +334,41 @@ export default function ScanResultsPage() {
                 </ScrollArea>
               ) : (
                 <p>No responses captured</p>
+              )}
+            </TabsContent>
+
+            {/* LINKS */}
+            <TabsContent value="links">
+              {scan.links?.length ? (
+                <ScrollArea className="h-[75vh] border rounded overflow-x-auto">
+                  <Table className="table-fixed w-full">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>#</TableHead>
+                        <TableHead>Link</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {scan.links.map((link, i) => (
+                        <TableRow key={i}>
+                          <TableCell>{i + 1}</TableCell>
+                          <TableCell className="truncate break-all">
+                            <a
+                              href={link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-500 underline"
+                            >
+                              {link}
+                            </a>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ScrollArea>
+              ) : (
+                <p>No links discovered</p>
               )}
             </TabsContent>
           </Tabs>

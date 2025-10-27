@@ -30,6 +30,8 @@ class ScanOut(Schema):
     downloads: list[dict] = []
     requests: list[dict] = []
     responses: list[dict] = []
+    links: list[str] = []
+    ssl_info: dict | None = None
 
     @staticmethod
     def from_orm(scan):
@@ -47,6 +49,8 @@ class ScanOut(Schema):
             downloads=scan.downloads or [],
             requests=scan.requests or [],
             responses=scan.responses or [],
+            links=scan.links or [],
+            ssl_info=scan.ssl_info or {},
         )
     
 class ScanListOut(Schema):
