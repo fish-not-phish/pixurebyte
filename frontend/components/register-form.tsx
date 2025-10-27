@@ -35,9 +35,7 @@ export function RegisterForm({ className, loading, setLoading, ...props }: Regis
 
       if (teams.length > 0) {
         const teamId = teams[teams.length - 1].id;
-        toast.success("Account created", {
-          description: "Welcome! Redirecting to your dashboard...",
-        });
+        toast.success("Account created");
         setTimeout(() => (window.location.href = `/team/${teamId}`), 1200);
       }
     } catch (err: unknown) {

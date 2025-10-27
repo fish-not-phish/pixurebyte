@@ -34,9 +34,7 @@ export function LoginForm({ loading, setLoading, className, ...props }: LoginFor
 
       if (teams.length > 0) {
         const teamId = teams[teams.length - 1].id;
-        toast.success("Login successful", {
-          description: "Redirecting to your dashboard...",
-        });
+        toast.success("Login successful");
         setTimeout(() => (window.location.href = `/team/${teamId}`), 1200);
       } else {
         toast.error("No team found", {
