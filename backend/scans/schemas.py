@@ -31,6 +31,7 @@ class ScanOut(Schema):
     requests: list[dict] = []
     responses: list[dict] = []
     links: list[str] = []
+    scripts: list[str] = []
     ssl_info: dict | None = None
 
     @staticmethod
@@ -50,6 +51,7 @@ class ScanOut(Schema):
             requests=scan.requests or [],
             responses=scan.responses or [],
             links=scan.links or [],
+            scripts=scan.scripts or [],
             ssl_info=scan.ssl_info or {},
         )
     

@@ -104,7 +104,7 @@ export default function ScanResultsPage() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="grid grid-cols-7 w-full mb-4">
+            <TabsList className="grid grid-cols-8 w-full mb-4">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="screenshot">Screenshot</TabsTrigger>
               <TabsTrigger value="html">HTML</TabsTrigger>
@@ -112,6 +112,7 @@ export default function ScanResultsPage() {
               <TabsTrigger value="requests">Requests</TabsTrigger>
               <TabsTrigger value="responses">Responses</TabsTrigger>
               <TabsTrigger value="links">Links</TabsTrigger>
+              <TabsTrigger value="scripts">Scripts</TabsTrigger>
             </TabsList>
 
             {/* OVERVIEW */}
@@ -287,18 +288,22 @@ export default function ScanResultsPage() {
             <TabsContent value="requests">
               {scan.requests?.length ? (
                 <ScrollArea className="h-[75vh] border rounded overflow-x-auto">
-                  <Table className="table-fixed w-full">
+                  <Table className="w-full">
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-24">Method</TableHead>
+                        <TableHead className="w-[100px] text-center">Method</TableHead>
                         <TableHead>URL</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {scan.requests?.map((r: ScanRequest, i: number) => (
+                      {scan.requests.map((r, i) => (
                         <TableRow key={i}>
-                          <TableCell>{r.method}</TableCell>
-                          <TableCell className="truncate break-all">{r.url}</TableCell>
+                          <TableCell className="text-center font-mono text-xs w-[100px]">
+                            {r.method}
+                          </TableCell>
+                          <TableCell className="break-words whitespace-normal text-sm">
+                            {r.url}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -309,24 +314,31 @@ export default function ScanResultsPage() {
               )}
             </TabsContent>
 
+
             {/* RESPONSES */}
             <TabsContent value="responses">
               {scan.responses?.length ? (
                 <ScrollArea className="h-[75vh] border rounded overflow-x-auto">
-                  <Table className="table-fixed w-full">
+                  <Table className="w-full">
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-24">Status</TableHead>
-                        <TableHead className="w-24">OK</TableHead>
+                        <TableHead className="w-[80px] text-center">Status</TableHead>
+                        <TableHead className="w-[60px] text-center">OK</TableHead>
                         <TableHead>URL</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {scan.responses?.map((r: ScanResponse, i: number) => (
+                      {scan.responses.map((r, i) => (
                         <TableRow key={i}>
-                          <TableCell>{r.status}</TableCell>
-                          <TableCell>{r.ok ? "✅" : "❌"}</TableCell>
-                          <TableCell className="truncate break-all">{r.url}</TableCell>
+                          <TableCell className="text-center font-mono text-xs w-[80px]">
+                            {r.status}
+                          </TableCell>
+                          <TableCell className="text-center w-[60px]">
+                            {r.ok ? "✅" : "❌"}
+                          </TableCell>
+                          <TableCell className="break-words whitespace-normal text-sm">
+                            {r.url}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -337,29 +349,30 @@ export default function ScanResultsPage() {
               )}
             </TabsContent>
 
+
             {/* LINKS */}
             <TabsContent value="links">
               {scan.links?.length ? (
                 <ScrollArea className="h-[75vh] border rounded overflow-x-auto">
-                  <Table className="table-fixed w-full">
+                  <Table className="w-full">
                     <TableHeader>
                       <TableRow>
-                        <TableHead>#</TableHead>
+                        <TableHead className="w-[60px] text-center">#</TableHead>
                         <TableHead>Link</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {scan.links.map((link, i) => (
                         <TableRow key={i}>
-                          <TableCell>{i + 1}</TableCell>
-                          <TableCell className="truncate break-all">
+                          <TableCell className="text-center font-mono text-xs w-[60px]">{i + 1}</TableCell>
+                          <TableCell className="break-words whitespace-normal">
                             <a
                               href={link}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-blue-500 underline"
+                              className="text-blue-500 underline break-all"
                             >
-                              {link}
+                              {link.length > 120 ? `${link.slice(0, 120)}…` : link}
                             </a>
                           </TableCell>
                         </TableRow>
@@ -369,6 +382,94 @@ export default function ScanResultsPage() {
                 </ScrollArea>
               ) : (
                 <p>No links discovered</p>
+              )}
+            </TabsContent>
+
+            {/* SCRIPTS */}
+            <TabsContent value="scripts">
+              {scan.scripts?.length ? (() => {
+                const scored = scan.scripts.map((src) => {
+                  const lower = src.toLowerCase();
+                  let score = 5;
+
+                  if (/:\\d{2,5}/.test(lower)) score = 1;
+                  else if (/\b\d{1,3}(\.\d{1,3}){3}\b/.test(lower)) score = 2;
+                  else if (lower.startsWith("http://")) score = 3;
+                  else if (/\basync\b/.test(lower)) score = 4;
+
+                  return { src, score };
+                });
+
+                const sorted = scored.sort((a, b) => a.score - b.score);
+
+                const label = (score: number) => {
+                  switch (score) {
+                    case 1:
+                      return <Badge variant="destructive">Port Usage</Badge>;
+                    case 2:
+                      return <Badge variant="destructive">IP Address</Badge>;
+                    case 3:
+                      return <Badge variant="destructive">HTTP (Insecure)</Badge>;
+                    case 4:
+                      return <Badge variant="secondary">Async Load</Badge>;
+                    default:
+                      return <Badge variant="outline">Normal</Badge>;
+                  }
+                };
+
+                const suspiciousCount = scored.filter(s => s.score < 5).length;
+
+                return (
+                  <div>
+                    {suspiciousCount > 0 ? (
+                      <p className="mb-3 text-sm font-medium text-destructive">
+                        ⚠️ {suspiciousCount} potentially suspicious script{(suspiciousCount > 1 ? "s" : "")} detected
+                      </p>
+                    ) : (
+                      <p className="mb-3 text-sm text-muted-foreground">
+                        ✅ No suspicious scripts detected
+                      </p>
+                    )}
+
+                    <ScrollArea className="h-[75vh] border rounded overflow-x-auto">
+                      <Table className="w-full">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[50px] text-center">#</TableHead>
+                            <TableHead className="w-[160px] text-center">Indicator</TableHead>
+                            <TableHead>Script Source</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {sorted.map(({ src, score }, i) => (
+                            <TableRow key={i}>
+                              <TableCell className="text-center">{i + 1}</TableCell>
+                              <TableCell className="text-center">{label(score)}</TableCell>
+                              <TableCell className="break-words whitespace-normal font-mono text-xs">
+                                {src.startsWith("http") || src.startsWith("/")
+                                  ? (
+                                    <a
+                                      href={src}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-blue-500 underline"
+                                    >
+                                      {src}
+                                    </a>
+                                  )
+                                  : (
+                                    <span className="text-muted-foreground">{src}</span>
+                                  )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </ScrollArea>
+                  </div>
+                );
+              })() : (
+                <p>No scripts discovered</p>
               )}
             </TabsContent>
           </Tabs>

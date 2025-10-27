@@ -189,6 +189,12 @@ def run_scan(scan_id: str, team_id: str, url: str):
         else:
             status = "failed"
 
+    scripts = []
+    for script in response.css('script[src]'):
+        if not script:
+            continue
+        scripts.append(str(script))
+
     links = []
     for link in response.css('a::attr(href)'):
         if not link:
@@ -225,6 +231,7 @@ def run_scan(scan_id: str, team_id: str, url: str):
         "responses": collected_responses,
         "downloads": downloads,
         "links": links,
+        "scripts": scripts,
         "ssl_info": ssl_info,
     }
 

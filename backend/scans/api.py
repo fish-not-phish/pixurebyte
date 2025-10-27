@@ -70,6 +70,7 @@ def complete_scan_endpoint(request, team_id: str, scan_id: str):
     requests_list  = payload.get("requests") or []
     responses_list = payload.get("responses") or []
     links_list     = payload.get("links") or []
+    scripts_list   = payload.get("scripts") or []
     downloads_list = payload.get("downloads") or []
     scan.ssl_info  = payload.get("ssl_info") or {}
 
@@ -82,6 +83,7 @@ def complete_scan_endpoint(request, team_id: str, scan_id: str):
     scan.requests = requests_list
     scan.responses = responses_list
     scan.links = links_list
+    scan.scripts = scripts_list
     scan.downloads = downloads_list
 
     scan.status = payload.get("status", "complete")

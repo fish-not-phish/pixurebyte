@@ -45,8 +45,10 @@ export interface Scan {
   requests?: ScanRequest[];
   responses?: ScanResponse[];
   links?: string[];
+  scripts?: string[];
   ssl_info?: ScanSSLInfo;
 }
+
 
 export interface ScanCreateIn {
   url: string;

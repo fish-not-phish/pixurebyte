@@ -35,6 +35,7 @@ class Scan(models.Model):
     requests = models.JSONField(default=list, blank=True)
     responses = models.JSONField(default=list, blank=True)
     links = models.JSONField(default=list, blank=True)
+    scripts = models.JSONField(default=list, blank=True)
     downloads = models.JSONField(default=list, blank=True)
     intelligence = models.JSONField(default=dict, blank=True)
     ssl_info = models.JSONField(default=dict, blank=True)
