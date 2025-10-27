@@ -5,9 +5,7 @@ let isRefreshing = false;
 let refreshPromise: Promise<string | null> | null = null;
 
 async function refreshAccessToken(): Promise<string | null> {
-  if (isRefreshing && refreshPromise) {
-    return refreshPromise;
-  }
+  if (isRefreshing && refreshPromise) return refreshPromise;
   isRefreshing = true;
 
   const refresh = localStorage.getItem("refresh");
@@ -56,6 +54,7 @@ export async function apiFetch<T>(
 
   if (res.status === 401) {
     const newAccess = await refreshAccessToken();
+
     if (newAccess) {
       res = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
@@ -64,6 +63,20 @@ export async function apiFetch<T>(
           Authorization: `Bearer ${newAccess}`,
         },
       });
+    } else {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+        window.location.href = "/login";
+        return Promise.reject(new Error("Redirecting to login"));
+      }
+    }
+  }
+
+  if (res.status === 403) {
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+      return Promise.reject(new Error("Redirecting to login"));
     }
   }
 
