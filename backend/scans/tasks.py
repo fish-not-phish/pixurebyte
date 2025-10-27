@@ -5,6 +5,8 @@ import boto3
 import time
 from django.conf import settings
 import re
+from django.utils import timezone
+from datetime import timedelta
 
 User = get_user_model()
 
@@ -110,3 +112,10 @@ def initiate_scan(scan_id: str):
         "public_ip": public_ip,
         "private_ip": private_ip,
     }
+
+@shared_task
+def mark_stale_scans():
+    threshold = timezone.now() - timedelta(minutes=2)
+    stale_scans = Scan.objects.filter(status="processing", created_at__lt=threshold)
+    count = stale_scans.update(status="failed")
+    return f"{count} stale scan(s) marked as failed."
