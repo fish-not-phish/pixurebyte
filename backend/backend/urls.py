@@ -5,7 +5,7 @@ from scans.api import router as scans_router
 from ninja_extra import NinjaExtraAPI
 from ninja_jwt.controller import NinjaJWTDefaultController
 
-api = NinjaExtraAPI(title="PixureByte API", version="1.0", docs_url=None)
+api = NinjaExtraAPI(title="PixureByte API", version="1.1", docs_url=None)
 api.register_controllers(NinjaJWTDefaultController)
 
 api.add_router("/users/", users_router)

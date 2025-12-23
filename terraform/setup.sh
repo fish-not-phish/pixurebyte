@@ -133,6 +133,7 @@ DB_USER=${DB_USER}
 DB_PASSWORD=${DB_PASSWORD}
 DB_HOST=${DB_HOST}
 DB_PORT=${DB_PORT}
+REDIS_URL=${REDIS_URL}
 EOF
 
 echo "✅ .env.django file created successfully!"
