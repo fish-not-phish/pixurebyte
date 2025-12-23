@@ -163,7 +163,7 @@ export AWS_DEFAULT_REGION="us-east-2"
 
 ### 4. Clone the Repository
 ```bash
-git clone https://github.com/fishnotphish/pixurebyte.git
+git clone https://github.com/fish-not-phish/pixurebyte.git
 cd pixurebyte
 ```
 
