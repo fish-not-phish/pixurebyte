@@ -48,3 +48,16 @@ export async function createMember(
     body: JSON.stringify({ email, role }),
   });
 }
+
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<{ success: boolean }> {
+  return apiFetch<{ success: boolean }>("/users/me/password", {
+    method: "POST",
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  });
+}

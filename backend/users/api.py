@@ -10,6 +10,8 @@ from django.shortcuts import get_object_or_404
 from ninja.errors import HttpError
 from django.contrib.auth.models import AbstractBaseUser
 from ninja.responses import Response
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 User = get_user_model()
 router = Router(tags=["auth"])
@@ -185,3 +187,20 @@ def update_site_settings(request, payload: SiteSettingIn):
     return Response(
         {"allow_registration": setting.allow_registration}, status=200
     )
+
+@router.post("/me/password", auth=JWTAuth())
+def change_password(request, payload: PasswordChangeIn):
+    user = request.user
+
+    if not user.check_password(payload.current_password):
+        raise HttpError(400, "Current password is incorrect")
+
+    try:
+        validate_password(payload.new_password, user=user)
+    except ValidationError as e:
+        raise HttpError(400, e.messages)
+
+    user.set_password(payload.new_password)
+    user.save()
+
+    return {"success": True}

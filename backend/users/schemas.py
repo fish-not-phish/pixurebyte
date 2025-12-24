@@ -67,3 +67,7 @@ class SiteSettingOut(Schema):
 
 class SiteSettingIn(Schema):
     allow_registration: bool
+
+class PasswordChangeIn(Schema):
+    current_password: str
+    new_password: str

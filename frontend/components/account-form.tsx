@@ -27,10 +27,30 @@ import { apiFetch } from "@/lib/api";
 import { Team } from "@/types/teams";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import type { UserOut } from "@/types/users";
+import { changePassword } from "@/services/members";
 
 const accountFormSchema = z.object({
   email: z.string().email(),
 });
+
+const passwordFormSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Current password required"),
+
+    newPassword: z
+      .string()
+      .min(12, "Password must be at least 12 characters long")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(/[0-9]/, "Password must contain at least one number")
+      .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character"),
+
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match",
+  });
 
 type AccountFormValues = z.infer<typeof accountFormSchema>;
 
@@ -43,6 +63,29 @@ export default function AccountSettingsForm() {
     resolver: zodResolver(accountFormSchema),
     defaultValues: { email: "" },
   });
+
+  const passwordForm = useForm<z.infer<typeof passwordFormSchema>>({
+  resolver: zodResolver(passwordFormSchema),
+  defaultValues: {
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  },
+});
+
+async function onPasswordSubmit(
+  data: z.infer<typeof passwordFormSchema>
+) {
+  try {
+    await changePassword(data.currentPassword, data.newPassword);
+
+    toast.success("Password updated successfully");
+    passwordForm.reset();
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to update password");
+  }
+}
 
   useEffect(() => {
     async function load() {
@@ -178,6 +221,64 @@ export default function AccountSettingsForm() {
               <Button type="submit" className="cursor-pointer">
                 Update Email
               </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+
+      <Card className="max-w-md">
+        <CardHeader>
+          <CardTitle className="text-lg">Change Password</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...passwordForm}>
+            <form
+              onSubmit={passwordForm.handleSubmit(onPasswordSubmit)}
+              className="space-y-4"
+            >
+              <FormField
+                control={passwordForm.control}
+                name="currentPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Current Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={passwordForm.control}
+                name="newPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>New Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={passwordForm.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm New Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <Button type="submit">Update Password</Button>
             </form>
           </Form>
         </CardContent>
