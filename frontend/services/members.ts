@@ -42,11 +42,14 @@ export async function createMember(
   teamId: string,
   email: string,
   role: Role
-): Promise<Member> {
-  return apiFetch<Member>(`/users/team/${teamId}/create-member`, {
-    method: "POST",
-    body: JSON.stringify({ email, role }),
-  });
+): Promise<Member & { password: string }> {
+  return apiFetch<Member & { password: string }>(
+    `/users/team/${teamId}/create-member`,
+    {
+      method: "POST",
+      body: JSON.stringify({ email, role }),
+    }
+  );
 }
 
 export async function changePassword(

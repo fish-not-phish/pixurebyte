@@ -71,3 +71,9 @@ class SiteSettingIn(Schema):
 class PasswordChangeIn(Schema):
     current_password: str
     new_password: str
+
+class CreateMemberOut(Schema):
+    id: UUID
+    email: str
+    role: Role
+    password: str

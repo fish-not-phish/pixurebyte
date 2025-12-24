@@ -147,7 +147,7 @@ def invite_member(request, team_id: UUID, payload: InviteIn):
 
     return {"id": user.id, "email": user.email, "role": membership.role}
 
-@router.post("/team/{team_id}/create-member", response=MemberOut, auth=JWTAuth())
+@router.post("/team/{team_id}/create-member", response=CreateMemberOut, auth=JWTAuth())
 def create_member(request, team_id: UUID, payload: CreateMemberIn):
     team = _require_team_member(team_id, request.user)
     _require_team_admin(team, request.user)
@@ -163,7 +163,7 @@ def create_member(request, team_id: UUID, payload: CreateMemberIn):
         is_staff=False,
     )
     Membership.objects.create(user=user, team=team, role=payload.role)
-    return {"id": user.id, "email": user.email, "role": payload.role}
+    return {"id": user.id, "email": user.email, "role": payload.role, "password": plain_password,}
 
 @router.post("/team/create", response=TeamSchema, auth=JWTAuth())
 def create_team(request, payload: TeamCreateIn):
