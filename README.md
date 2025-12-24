@@ -78,7 +78,7 @@ Pixurebyte is composed of two parts:
 
 | Component | Description |
 |------------|-------------|
-| **Local Stack** | Django backend, Redis, PostgreSQL, and frontend served locally via Docker Compose |
+| **Local Stack** | Django backend, Redis, PostgreSQL, and frontend (NextJS) served locally via Docker Compose |
 | **AWS Infrastructure** | S3 for media storage + ECS Fargate for ephemeral scan workers |
 
 This hybrid model allows **fast local management** with **elastic remote compute**.
@@ -100,7 +100,7 @@ Before installing, make sure you have:
 
 ## Installing Terraform (Linux)
 
-To run OvB's infrastructure components, you’ll need [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli). Here's how to install it on a Debian-based Linux system (e.g. Ubuntu):
+To run Pixurebytes infrastructure components, you’ll need [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli). Here's how to install it on a Debian-based Linux system (e.g. Ubuntu):
 
 **1. Update and install prerequisites**
 ```bash
